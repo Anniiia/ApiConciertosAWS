@@ -1,7 +1,10 @@
 using ApiConciertosAWS.Data;
+using ApiConciertosAWS.Helpers;
+using ApiConciertosAWS.Models;
 using ApiConciertosAWS.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
+using Newtonsoft.Json;
 
 namespace ApiConciertosAWS;
 
@@ -17,8 +20,12 @@ public class Startup
     // This method gets called by the runtime. Use this method to add services to the container
     public void ConfigureServices(IServiceCollection services)
     {
-        string connectionString =
-            Configuration.GetConnectionString("MySql");
+        string jsonSecrets = HelperSecretManager.GetSecretsAsync().GetAwaiter().GetResult();
+        KeysModel keysModel = JsonConvert.DeserializeObject<KeysModel>(jsonSecrets);
+        services.AddSingleton<KeysModel>(x => keysModel);
+
+        string connectionString = keysModel.MySql;
+
         services.AddTransient<RepositoryConciertos>();
         services.AddDbContext<ConciertosContext>
             (options => options.UseMySql(connectionString,
